@@ -9,6 +9,7 @@ import 'package:guadalajarav2/classes/user.dart';
 import 'package:guadalajarav2/utils/SuperGlobalVariables/ObjVar.dart';
 import 'package:guadalajarav2/utils/colors.dart';
 import 'package:guadalajarav2/database.dart';
+import 'package:guadalajarav2/utils/global_error_handler.dart';
 import 'package:guadalajarav2/utils/tools.dart';
 import 'package:guadalajarav2/views/Delivery_Certificate/adminClases/Places.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,16 +21,23 @@ late SharedPreferences prefs;
 MyPlace? myPlaceGlobal;
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  installGlobalErrorHandlers();
+
   // Inicializa los locales que vas a usar
   await initializeDateFormatting('es_MX', null);
   await initializeDateFormatting('en_US', null);
   prefs = await SharedPreferences.getInstance();
   if (prefs.containsKey('token')) {
     token = prefs.getString('token');
-    user = await getUserFromToken();
+    try {
+      user = await getUserFromToken();
+    } catch (_) {
+      user = null;
+    }
     if (user == null) {
       token = null;
-      prefs.remove('token');
+      await prefs.remove('token');
       user = User(
         type: UserType.guest,
         name: '',
@@ -51,6 +59,7 @@ class MyApp extends StatelessWidget {
     currentUser.width = MediaQuery.of(context).size.width;
     currentUser.height = MediaQuery.of(context).size.height;
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       scrollBehavior: MyCustomScrollBehavior(),
       theme: ThemeData(
         fontFamily: 'Nunito',

@@ -583,27 +583,29 @@ Future<bool> removeTokenFromDatabase(BuildContext context, String token) async {
 }
 
 Future<User?> getUserFromToken() async {
-  final response = await http.get(
-    Uri.parse('$addressLogin'),
-    headers: <String, String>{
-      "Access-Control-Allow-Origin": "*",
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': "$token",
-    },
-  );
+  try {
+    final response = await http
+        .get(
+          Uri.parse('$addressLogin'),
+          headers: <String, String>{
+            "Access-Control-Allow-Origin": "*",
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': "$token",
+          },
+        )
+        .timeout(const Duration(seconds: 8));
 
-  if (response.statusCode == 200) {
-    List<User> users = getUsersFromBody(response.body);
-    // print(users);
-    if (users.length > 0) {
-      user = users[0];
-      // print('[WEBSITE] Active User: $user');
-      // user.permissions = await getPermissions(user);
-      return user;
-    } else {
-      return null;
+    if (response.statusCode == 200) {
+      List<User> users = getUsersFromBody(response.body);
+      if (users.length > 0) {
+        user = users[0];
+        return user;
+      }
     }
-  } else {
+    return null;
+  } catch (e) {
+    // Backend caído / timeout / red: no tumbar el arranque de la web
+    print('[SERVER] getUserFromToken failed: $e');
     return null;
   }
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:guadalajarav2/utils/tools.dart';
 
 class ServicesBelt extends StatefulWidget {
@@ -29,15 +29,18 @@ class _ServicesBeltState extends State<ServicesBelt> {
   void initState() {
     super.initState();
     Timer.run(() async {
-      String manifestJson =
-          await DefaultAssetBundle.of(context).loadString('AssetManifest.json');
-      Iterable<String> imagesIt = json.decode(manifestJson).keys.where(
-          (String key) => key.startsWith('assets/images/${widget.urlRoot}'));
+      if (!mounted) return;
+      final manifest = await AssetManifest.loadFromAssetBundle(
+        DefaultAssetBundle.of(context),
+      );
+      final imagesIt = manifest
+          .listAssets()
+          .where((key) => key.startsWith('assets/images/${widget.urlRoot}'));
       for (String image in imagesIt) {
         String imgStr = image.replaceAll('%20', ' ');
-        // images.add(AssetImage(imgStr));
         imagesURLs.add(imgStr);
       }
+      if (!mounted) return;
       setState(() {});
     });
   }

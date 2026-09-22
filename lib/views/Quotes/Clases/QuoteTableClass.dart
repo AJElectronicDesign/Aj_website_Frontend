@@ -25,13 +25,21 @@ class QuoteTableClass {
           String? unitario,
           String? cantidad,
           String? total,
-          String? image}) =>
+          String? image,
+          String? notas,
+          int? id_quotePreview,
+          int? id_quote,
+          bool? isDescEdited}) =>
       QuoteTableClass(
           description: description ?? this.description,
           unitario: unitario ?? this.unitario,
           cantidad: cantidad ?? this.cantidad,
           image: image ?? this.image,
-          total: total ?? this.total);
+          total: total ?? this.total,
+          notas: notas ?? this.notas,
+          id_quotePreview: id_quotePreview ?? this.id_quotePreview,
+          id_quote: id_quote ?? this.id_quote,
+          isDescEdited: isDescEdited ?? this.isDescEdited);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

@@ -69,9 +69,18 @@ class _PreviewProjectsState extends State<PreviewProjects> {
   }
 
   Future<void> loadData() async {
-    date =
-        DateFormat('MMMM d, yyyy').format(DateTime.parse(widget.quote!.date!));
-    await getPreview(0);
+    try {
+      date = DateFormat('MMMM d, yyyy')
+          .format(DateTime.parse(widget.quote!.date!));
+      await getPreview(0);
+    } catch (e, st) {
+      print('[PreviewProjects] loadData error: $e\n$st');
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      PopupError(context);
+      return;
+    }
+    if (!mounted) return;
     setState(() {
       isLoading = false;
     });
@@ -128,21 +137,12 @@ class _PreviewProjectsState extends State<PreviewProjects> {
       print("Code: $code");
       if (code == 200) {
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         wrongPopup(context, "Error to send quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -185,21 +185,12 @@ class _PreviewProjectsState extends State<PreviewProjects> {
       print("Code: $code");
       if (code == 200) {
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         wrongPopup(context, "Error to send quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -224,16 +215,10 @@ class _PreviewProjectsState extends State<PreviewProjects> {
         await postPreview(addList);
       } else {
         wrongPopup(context, "Error to send quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -251,21 +236,12 @@ class _PreviewProjectsState extends State<PreviewProjects> {
       print("Code: $code");
       if (code == 200) {
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         wrongPopup(context, "Error to delete quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }

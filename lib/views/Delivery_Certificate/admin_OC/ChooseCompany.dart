@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:guadalajarav2/utils/tools.dart';
 import 'package:guadalajarav2/views/admin_view/AdminWidgets/Title.dart';
 import 'package:guadalajarav2/views/dashboard_main_top_bar.dart/dashboard_main_top_dar.dart';
 import '../Controllers/DAO.dart';
@@ -40,11 +41,21 @@ class _ChooseCompanyState extends State<ChooseCompany> {
   }
 
   getCustomers() async {
-    List<CustomersClass> customers1 = await DataAccessObject.getCustomer();
-    setState(() {
-      customers = customers1;
-      isAllCustomersLoaded = true;
-    });
+    try {
+      List<CustomersClass> customers1 = await DataAccessObject.getCustomer();
+      if (!mounted) return;
+      setState(() {
+        customers = customers1;
+        isAllCustomersLoaded = true;
+      });
+    } catch (e, st) {
+      print('[ChooseCompany] getCustomers error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        isAllCustomersLoaded = true;
+      });
+      PopupError(context);
+    }
   }
 
   Widget SetImages() {

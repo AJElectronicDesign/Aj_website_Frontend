@@ -143,6 +143,11 @@ class _Form_AssembliesState extends State<Form_Assemblies> {
   String usdOrMxn = "MXN";
   bool isLoading = true;
 
+  double? _parseFormattedDouble(String text) =>
+      double.tryParse(text.replaceAll(',', '').trim());
+
+  int? _parseQuantity(String text) => int.tryParse(text.trim());
+
 // ************************************************************************************* //
 // ************************************* InitState ************************************* //
 // ************************************************************************************* //
@@ -687,52 +692,59 @@ class _Form_AssembliesState extends State<Form_Assemblies> {
 
 // ********************** Information Operations Section ********************** //
   quantityOperactions() {
-    return onChanged = (quantity) {
+    return onChanged = (quantityValue) {
+      final qty = _parseQuantity(quantityValue);
+      if (qty == null || qty == 0) return;
+
       setState(() {
-        //operation Components
-        perComponentsPesos.text = formatter.format(
-            ((((double.parse(ajComponents.text))) *
-                    double.parse(dollarSell.text)) /
-                int.parse(quantity)));
+        final ajComponentsVal = _parseFormattedDouble(ajComponents.text);
+        final dollarSellVal = _parseFormattedDouble(dollarSell.text);
+        if (ajComponentsVal != null && dollarSellVal != null) {
+          perComponentsPesos.text = formatter.format(
+              (ajComponentsVal * dollarSellVal) / qty);
+        }
 
-        //operation PCB Purchase
-        double perpcb = double.parse(pcbTotalPesos.text.replaceAll(",", "")) /
-            int.parse(quantity);
-        pcbPerPesos.text = formatter.format(perpcb);
+        final pcbTotal = _parseFormattedDouble(pcbTotalPesos.text);
+        if (pcbTotal != null) {
+          pcbPerPesos.text = formatter.format(pcbTotal / qty);
+        }
 
-        //operation Ensamble
-        double perEnsamble =
-            double.parse(ensambleTotalPesos.text.replaceAll(",", "")) /
-                int.parse(quantity);
-        ensamblePerPesos.text = formatter.format(perEnsamble);
+        final ensambleTotal = _parseFormattedDouble(ensambleTotalPesos.text);
+        if (ensambleTotal != null) {
+          ensamblePerPesos.text = formatter.format(ensambleTotal / qty);
+        }
       });
     };
   }
 
   dollarSellOperations() {
-    return onChanged = (dollarSell) {
+    return onChanged = (dollarSellValue) {
+      final dollarSellVal = _parseFormattedDouble(dollarSellValue);
+      final qty = _parseQuantity(quantity.text);
+      if (dollarSellVal == null || qty == null || qty == 0) return;
+
       setState(() {
-        //operation Components
-        perComponentsPesos.text = formatter.format(
-            ((((double.parse(ajComponents.text))) * double.parse(dollarSell)) /
-                int.parse(quantity.text)));
+        final ajComponentsVal = _parseFormattedDouble(ajComponents.text);
+        if (ajComponentsVal != null) {
+          perComponentsPesos.text = formatter.format(
+              (ajComponentsVal * dollarSellVal) / qty);
+          totalComponentsPesos.text =
+              formatter.format(ajComponentsVal * dollarSellVal);
+        }
 
-        double totalEnsamble =
-            double.parse(ensambleAJ.text) * double.parse(dollarSell);
-        ensambleTotalPesos.text = formatter.format(totalEnsamble);
-        double perEnsamble = totalEnsamble / int.parse(quantity.text);
-        ensamblePerPesos.text = formatter.format(perEnsamble);
+        final ensambleAjVal = _parseFormattedDouble(ensambleAJ.text);
+        if (ensambleAjVal != null) {
+          final totalEnsamble = ensambleAjVal * dollarSellVal;
+          ensambleTotalPesos.text = formatter.format(totalEnsamble);
+          ensamblePerPesos.text = formatter.format(totalEnsamble / qty);
+        }
 
-        double pcbpesos = double.parse(pcbAJ.text) * double.parse(dollarSell);
-        pcbTotalPesos.text = formatter.format(pcbpesos);
-        double perpcb = pcbpesos / int.parse(quantity.text);
-        pcbPerPesos.text = formatter.format(perpcb);
-
-        totalComponentsPesos.text = formatter.format(
-            (((double.parse(ajComponents.text))) * double.parse(dollarSell)));
-        perComponentsPesos.text = formatter.format(
-            ((((double.parse(ajComponents.text))) * double.parse(dollarSell)) /
-                int.parse(quantity.text)));
+        final pcbAjVal = _parseFormattedDouble(pcbAJ.text);
+        if (pcbAjVal != null) {
+          final pcbpesos = pcbAjVal * dollarSellVal;
+          pcbTotalPesos.text = formatter.format(pcbpesos);
+          pcbPerPesos.text = formatter.format(pcbpesos / qty);
+        }
       });
     };
   }
@@ -1059,32 +1071,20 @@ class _Form_AssembliesState extends State<Form_Assemblies> {
             setState(() => isPressed = true);
             setState(() => isPressedSave = true);
             GoodPopup(context, "Saved");
-            Future.delayed(Duration(seconds: 3), () {
-              Navigator.of(context).pop();
-            });
           }
         } else {
           setState(() => isPressed = true);
           setState(() => isPressedSave = true);
           GoodPopup(context, "Saved");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         }
       } else {
         setState(() => isPressed = false);
         wrongPopup(context, "Error to send quote");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       setState(() => isPressed = false);
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -1105,24 +1105,15 @@ class _Form_AssembliesState extends State<Form_Assemblies> {
         setState(() => isPressed = false);
         setState(() => isPressedSave = false);
         wrongPopup(context, "Error to send Digikeys");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         setState(() => isPressed = true);
         setState(() => isPressedSave = true);
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       setState(() => isPressed = false);
       setState(() => isPressedSave = false);
       wrongPopup(context, "Error to send Digikeys");
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
     }
   }
 
@@ -1655,9 +1646,6 @@ class _Form_AssembliesState extends State<Form_Assemblies> {
                     }
                   } else {
                     wrongPopup(context, "Save the quote first");
-                    Future.delayed(Duration(seconds: 3), () {
-                      Navigator.of(context).pop();
-                    });
                   }
                 }))
       ],

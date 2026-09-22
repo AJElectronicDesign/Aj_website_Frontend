@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:guadalajarav2/alert.dart';
 import 'package:guadalajarav2/utils/colors.dart';
+import 'package:guadalajarav2/utils/global_error_handler.dart';
 import 'package:guadalajarav2/inventory/inventoryListView.dart';
 import 'dart:convert';
 import 'dart:html' as html;
@@ -54,23 +55,8 @@ void showToast(
   );
 }
 
-void PopupError(context) async {
-  return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Theme(
-            data: ThemeData(colorScheme: ColorScheme.light()),
-            child: CupertinoAlertDialog(
-              title: Text(
-                "Error",
-                style: TextStyle(),
-              ),
-              content: Text("Please try again", style: TextStyle()),
-              actions: [],
-            ));
-      });
-  //await FlutterBluePlus.turnOn();
+void PopupError(context, {String message = "Please try again"}) async {
+  await showAppError(context: context, message: message);
 }
 
 openDialog(

@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:flutter/material.dart';
+import 'package:guadalajarav2/utils/tools.dart';
 import 'package:guadalajarav2/views/Delivery_Certificate/Controllers/DAO.dart';
 import 'package:guadalajarav2/views/Delivery_Certificate/adminClases/CustomerClass.dart';
 import 'package:guadalajarav2/views/Quotes/Clases/QuoteClass.dart';
@@ -26,15 +27,26 @@ class _DesplegableQuotesState extends State<DesplegableQuotes> {
   List<QuoteClass> quotes = [];
 
   getAllQuotes() async {
-    List<QuoteClass> quotes1 =
-        await DataAccessObject.getQuotesByCustomer(widget.customer.id_customer);
-    setState(() {
-      if (quotes1.isNotEmpty) {
-        areThereData = true;
-      }
-      quotes = quotes1;
-      isAllCustomersLoaded = true;
-    });
+    try {
+      List<QuoteClass> quotes1 = await DataAccessObject.getQuotesByCustomer(
+          widget.customer.id_customer);
+      if (!mounted) return;
+      setState(() {
+        if (quotes1.isNotEmpty) {
+          areThereData = true;
+        }
+        quotes = quotes1;
+        isAllCustomersLoaded = true;
+      });
+    } catch (e, st) {
+      print('[DesplegableQuotes] getAllQuotes error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        isAllCustomersLoaded = true;
+        areThereData = false;
+      });
+      PopupError(context);
+    }
   }
 
   @override

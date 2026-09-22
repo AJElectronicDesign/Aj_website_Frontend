@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:guadalajarav2/main.dart';
 import 'package:guadalajarav2/utils/about_us/about_us_handler.dart';
@@ -23,12 +23,13 @@ class _AboutOurProjectsState extends State<AboutOurProjects> {
   void initState() {
     super.initState();
     Timer.run(() async {
-      String manifestJson =
-          await DefaultAssetBundle.of(context).loadString('AssetManifest.json');
-      Iterable<String> imagesIt = json
-          .decode(manifestJson)
-          .keys
-          .where((String key) => key.startsWith('assets/images/projects'));
+      if (!mounted) return;
+      final manifest = await AssetManifest.loadFromAssetBundle(
+        DefaultAssetBundle.of(context),
+      );
+      final imagesIt = manifest
+          .listAssets()
+          .where((key) => key.startsWith('assets/images/projects'));
       values = await getProjectLikes();
       Map<String, String> noValues = {};
       for (String image in imagesIt) {
@@ -74,6 +75,7 @@ class _AboutOurProjectsState extends State<AboutOurProjects> {
             .add(AssetImage("assets/images/projects/" + i.toString() + ".jpg"));
       }
 
+      if (!mounted) return;
       setState(() {
         //images.removeRange(20, 40);
       });

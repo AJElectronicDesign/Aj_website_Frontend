@@ -44,7 +44,6 @@ class _TileQuotesState extends State<TileQuotes> {
   double valueLinearProgressIndicatorCopyQuote = 0;
   @override
   void initState() {
-    getPreview();
     List splitDate = widget.quote.date!.split(" ");
     fecha = splitDate[0];
     super.initState();
@@ -53,6 +52,7 @@ class _TileQuotesState extends State<TileQuotes> {
   getPreview() async {
     List<QuoteTableClass> preview1 =
         await DataAccessObject.selectPreviewByQuote(widget.quote.id_Quote);
+    if (!mounted) return;
     setState(() {
       if (preview1.isNotEmpty) {
         isServiceSavedQuote = true;
@@ -69,6 +69,7 @@ class _TileQuotesState extends State<TileQuotes> {
         productsQuotes.add(productsQuotes1[i]);
       }
     }
+    if (!mounted) return;
     setState(() => valueLinearProgressIndicatorCopyQuote += .1);
   }
 
@@ -137,10 +138,12 @@ class _TileQuotesState extends State<TileQuotes> {
           widget.quote.assemblyDhlCost,
           widget.quote.assemblyTotalMXN,
           widget.quote.perAssemblyMXN);
+      if (!mounted) return;
       setState(() => valueLinearProgressIndicatorCopyQuote += .2);
       print("Error numero: $code");
       if (code == 200) {
         if (widget.quote.quoteType == 1) {
+          if (!mounted) return;
           setState(() => valueLinearProgressIndicatorCopyQuote += .6);
           GoodPopup(context, "Quote duplicate succesfully!");
           Future.delayed(Duration(seconds: 3), () {
@@ -160,15 +163,9 @@ class _TileQuotesState extends State<TileQuotes> {
         }
       } else {
         wrongPopup(context, "Error to copy quote");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       wrongPopup(context, e);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
     }
   }
 
@@ -176,9 +173,11 @@ class _TileQuotesState extends State<TileQuotes> {
     int id_quote = 0;
     List<QuoteClass> allQuotes = await DataAccessObject.getQuotes();
 
+    if (!mounted) return id_quote;
     setState(() {
       id_quote = allQuotes[allQuotes.length - 1].id_Quote!;
     });
+    if (!mounted) return id_quote;
     setState(() => valueLinearProgressIndicatorCopyQuote += .1);
     return id_quote;
   }
@@ -189,6 +188,7 @@ class _TileQuotesState extends State<TileQuotes> {
     for (var i = 0; i < productstoPost.length; i++) {
       productstoPost[i].id_quote = id_quote;
     }
+    if (!mounted) return;
     setState(() => valueLinearProgressIndicatorCopyQuote += .1);
     for (var i = 0; i < productstoPost.length; i++) {
       try {
@@ -203,19 +203,15 @@ class _TileQuotesState extends State<TileQuotes> {
             productstoPost[i].importe);
         if (code != 200) {
           wrongPopup(context, "Error to send products");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         }
       } catch (e) {
         wrongPopup(context, "Error to send products $e");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     }
+    if (!mounted) return;
     setState(() => valueLinearProgressIndicatorCopyQuote += .2);
     if (code == 200) {
+      if (!mounted) return;
       setState(() => valueLinearProgressIndicatorCopyQuote += .1);
       GoodPopup(context, "Quote duplicate succesfully!");
       Future.delayed(Duration(seconds: 3), () {
@@ -228,9 +224,6 @@ class _TileQuotesState extends State<TileQuotes> {
       });
     } else {
       wrongPopup(context, "Error to send products");
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
     }
   }
 
@@ -333,7 +326,10 @@ class _TileQuotesState extends State<TileQuotes> {
                                               2) {
                                             //No data yet
                                           } else {
+                                            // Solo al descargar: evita N peticiones al abrir la lista
+                                            await getPreview();
                                             await getProductsPerQuote();
+                                            if (!mounted) return;
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
