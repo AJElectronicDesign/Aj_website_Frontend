@@ -8,6 +8,7 @@ import 'package:guadalajarav2/views/admin_view/AdminWidgets/Title.dart';
 import 'package:guadalajarav2/views/Delivery_Certificate/widgets/Texts.dart';
 import 'package:guadalajarav2/views/Delivery_Certificate/Entregas/EditEntrega.dart';
 import '../../../utils/colors.dart';
+import '../../../utils/tools.dart';
 import '../widgets/Customs_OC/CustomDesplegableTable.dart';
 import '../Controllers/DAO.dart';
 import '../adminClases/CertificadoEntregaClass.dart';
@@ -31,7 +32,7 @@ class _OCListState extends State<OCList> {
   List<ClassCertificadoEntrega> Entrega = [];
   List<List<ClassCertificadoEntrega>> EntregasGlobal = [];
   String? date_start;
-  bool isAllCustomersLoaded = false;
+  bool isLoading = true;
   bool areThereData = false;
   @override
   void initState() {
@@ -40,49 +41,64 @@ class _OCListState extends State<OCList> {
   }
 
   getOC() async {
-    List<OrdenCompraClass> OC1 =
-        await DataAccessObject.selectOCCustomer(widget.id_customer);
-    setState(() {
-      OC = OC1;
+    try {
+      List<OrdenCompraClass> OC1 =
+          await DataAccessObject.selectOCCustomer(widget.id_customer);
+      if (!mounted) return;
       if (OC1.isEmpty) {
-        areThereData = false;
-      } else {
-        getEntrega();
-        areThereData = true;
+        setState(() {
+          OC = OC1;
+          areThereData = false;
+          isLoading = false;
+        });
+        return;
       }
-    });
+      setState(() {
+        OC = OC1;
+        areThereData = true;
+      });
+      await getEntrega();
+    } catch (e, st) {
+      print('[OCList] getOC error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        areThereData = false;
+        isLoading = false;
+      });
+      PopupError(context);
+    }
   }
 
   getEntrega() async {
-    List<int> ids_OC = [];
-    int count = 0;
-    List<ClassCertificadoEntrega> AllEntregas =
-        await DataAccessObject.getEntrega();
-
-    for (var i = 0; i < AllEntregas.length; i++) {
-      ids_OC.add(AllEntregas[i].id_OC!);
-    }
-
-    List<int> totalids = ids_OC.toSet().toList();
-    count = totalids.length;
-
-    for (var i = 0; i < OC.length; i++) {
-      if (i < count) {
-        List<ClassCertificadoEntrega> Entrega1 =
-            await DataAccessObject.selectEntrega(OC[i].id_OC);
-        if (Entrega1.isEmpty) {
-          EntregasGlobal.add(Entrega);
-        } else {
-          EntregasGlobal.add(Entrega1);
-        }
-      } else {
-        EntregasGlobal.add(Entrega);
+    try {
+      // Una sola llamada por cliente en lugar de getEntrega global + N selects
+      final allByCustomer =
+          await DataAccessObject.selectEntregaByCustomer(widget.id_customer);
+      final Map<int, List<ClassCertificadoEntrega>> byOc = {};
+      for (final entrega in allByCustomer) {
+        final idOc = entrega.id_OC;
+        if (idOc == null) continue;
+        byOc.putIfAbsent(idOc, () => <ClassCertificadoEntrega>[]).add(entrega);
       }
+
+      final List<List<ClassCertificadoEntrega>> grouped = [];
+      for (final oc in OC) {
+        grouped.add(byOc[oc.id_OC] ?? <ClassCertificadoEntrega>[]);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        EntregasGlobal = grouped;
+        isLoading = false;
+      });
+    } catch (e, st) {
+      print('[OCList] getEntrega error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+      PopupError(context);
     }
-    setState(() {
-      print("Total = ${EntregasGlobal.length}");
-      isAllCustomersLoaded = true;
-    });
   }
 
   @override
@@ -117,19 +133,19 @@ class _OCListState extends State<OCList> {
           shape: const CircleBorder(),
           child: Icon(Icons.add),
         ),
-        body: areThereData
-            ? Container(
-                margin: EdgeInsets.only(top: 15),
-                child: !isAllCustomersLoaded
-                    ? LoadingData()
-                    : CustomDesplegable(
-                        id_customer: widget.id_customer,
-                        EntregasGlobal: EntregasGlobal,
-                        OC: OC,
-                        customerName: widget.customerName,
-                      ),
-              )
-            : NoData());
+        body: isLoading
+            ? LoadingData()
+            : areThereData
+                ? Container(
+                    margin: EdgeInsets.only(top: 15),
+                    child: CustomDesplegable(
+                      id_customer: widget.id_customer,
+                      EntregasGlobal: EntregasGlobal,
+                      OC: OC,
+                      customerName: widget.customerName,
+                    ),
+                  )
+                : NoData());
   }
 
   Widget NoData() {
@@ -139,7 +155,7 @@ class _OCListState extends State<OCList> {
   }
 
   Widget ListOC() {
-    return !isAllCustomersLoaded
+    return isLoading
         ? LoadingData()
         : ListView.builder(
             itemCount: OC.length,

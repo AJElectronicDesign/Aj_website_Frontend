@@ -105,9 +105,6 @@ class _PorcentajesFormState extends State<PorcentajesForm> {
           double.parse(ajEnsamble.text));
       if (code != 200) {
         wrongPopup(context, "Error to send percentage");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => CotizacionesHome()),
@@ -115,9 +112,6 @@ class _PorcentajesFormState extends State<PorcentajesForm> {
       }
     } catch (e) {
       wrongPopup(context, "Error to send percentage");
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
     }
   }
 
@@ -143,9 +137,6 @@ class _PorcentajesFormState extends State<PorcentajesForm> {
           double.parse(ajEnsamble.text));
       if (code != 200) {
         wrongPopup(context, "Error to send percentage");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => CotizacionesHome()),
@@ -153,9 +144,6 @@ class _PorcentajesFormState extends State<PorcentajesForm> {
       }
     } catch (e) {
       wrongPopup(context, "Error to send percentage");
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
     }
   }
 

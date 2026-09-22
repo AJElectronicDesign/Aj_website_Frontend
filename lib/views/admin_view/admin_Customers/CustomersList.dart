@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:guadalajarav2/utils/tools.dart';
 import '../../../widgets/custom/Custom_Customers/CustomTableCustomers.dart';
 import '../../Delivery_Certificate/Controllers/DAO.dart';
 import '../../Delivery_Certificate/adminClases/CustomerClass.dart';
@@ -31,11 +32,21 @@ class _CustomersListState extends State<CustomersList> {
   }
 
   getCustomers() async {
-    List<CustomersClass> customers1 = await DataAccessObject.getCustomer();
-    setState(() {
-      customers = customers1;
-      isAllCustomersLoaded = true;
-    });
+    try {
+      List<CustomersClass> customers1 = await DataAccessObject.getCustomer();
+      if (!mounted) return;
+      setState(() {
+        customers = customers1;
+        isAllCustomersLoaded = true;
+      });
+    } catch (e, st) {
+      print('[CustomersList] getCustomers error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        isAllCustomersLoaded = true;
+      });
+      PopupError(context);
+    }
   }
 }
 //convertListToInt(customers[i].logo!)

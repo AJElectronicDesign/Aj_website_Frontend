@@ -1083,9 +1083,6 @@ class _EditFormAssemblyState extends State<EditFormAssembly> {
                 .whenComplete(() {
               //setState(() => isPressed = true);
               GoodPopup(context, "Updated");
-              Future.delayed(Duration(seconds: 3), () {
-                Navigator.of(context).pop();
-              });
             });
           } else if (!areThereDigikeys && products.isNotEmpty) {
             setState(() {
@@ -1095,31 +1092,19 @@ class _EditFormAssemblyState extends State<EditFormAssembly> {
           } else {
             //setState(() => isPressed = true);
             GoodPopup(context, "Updated");
-            Future.delayed(Duration(seconds: 3), () {
-              Navigator.of(context).pop();
-            });
           }
         } else {
           //setState(() => isPressed = true);
           GoodPopup(context, "Updated");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         }
       } else {
         //setState(() => isPressed = false);
         wrongPopup(context, "Error to update quote");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       //setState(() => isPressed = false);
       print(e);
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -1138,22 +1123,13 @@ class _EditFormAssemblyState extends State<EditFormAssembly> {
       if (code != 200) {
         //setState(() => isPressed = false);
         wrongPopup(context, "Error to update digikeys");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         //setState(() => isPressed = true);
         GoodPopup(context, "Updated");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       //setState(() => isPressed = false);
       wrongPopup(context, "Error to update digikeys");
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
     }
   }
 

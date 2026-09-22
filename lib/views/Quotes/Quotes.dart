@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:guadalajarav2/utils/SuperGlobalVariables/ObjVar.dart';
+import 'package:guadalajarav2/utils/tools.dart';
 import 'package:guadalajarav2/views/Delivery_Certificate/widgets/deliverFieldWidget.dart';
 import '../../utils/colors.dart';
 import '../Delivery_Certificate/Controllers/DAO.dart';
@@ -48,11 +49,21 @@ class _CotizacionesHomeState extends State<CotizacionesHome> {
   }
 
   getCustomers() async {
-    List<CustomersClass> customers1 = await DataAccessObject.getCustomer();
-    setState(() {
-      customers = customers1;
-      isAllCustomersLoaded = true;
-    });
+    try {
+      List<CustomersClass> customers1 = await DataAccessObject.getCustomer();
+      if (!mounted) return;
+      setState(() {
+        customers = customers1;
+        isAllCustomersLoaded = true;
+      });
+    } catch (e, st) {
+      print('[CotizacionesHome] getCustomers error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        isAllCustomersLoaded = true;
+      });
+      PopupError(context);
+    }
   }
 
   @override

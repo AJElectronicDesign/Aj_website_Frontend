@@ -103,10 +103,14 @@ Future<void> showQuoteExportDialog({
               // Log útil para confirmar que sí entra aquí:
               // ignore: avoid_print
               print('[Export] start | type=$type | en=$english | isPDF=$isPDF');
-              final resolvedNotes = resolveNotesForExport(
-                currentNotes: notes,
-                isEnglish: english,
-              );
+              // Si el caller marca notesEdited, las notas del preview son la fuente
+              // de verdad. Si no, resolvemos defaults por idioma.
+              final resolvedNotes = notesEdited
+                  ? notes
+                  : resolveNotesForExport(
+                      currentNotes: notes,
+                      isEnglish: english,
+                    );
               await ExportToPDFUnified(
                       type: type,
                       isPDF: isPDF,
@@ -117,7 +121,8 @@ Future<void> showQuoteExportDialog({
                       notes: resolvedNotes,
                       addComponents: addComponents,
                       addPCB: addPCB,
-                      notesEdited: notesEdited)
+                      // Evita que createPDF sobrescriba notas ya resueltas/custom
+                      notesEdited: true)
                   .createPDF(pageFormat);
 
               // ignore: avoid_print
@@ -252,9 +257,6 @@ void PDFLanguageQuotes(context, addPCB, addComponents, dataTable, quote,
                     if (onErrore) {
                       print("Error my broo pero entree");
                       PopupError(context);
-                      Future.delayed(Duration(seconds: 3), () {
-                        Navigator.of(context).pop();
-                      });
                     } else {
                       Navigator.of(context).pop();
                       // Navigator.of(context).pushAndRemoveUntil(
@@ -307,9 +309,6 @@ void PDFLanguageQuotes(context, addPCB, addComponents, dataTable, quote,
                     if (onErrore) {
                       print("Error my broo pero entree");
                       PopupError(context);
-                      Future.delayed(Duration(seconds: 3), () {
-                        Navigator.of(context).pop();
-                      });
                     } else {
                       Navigator.of(context).pop();
                       // Navigator.of(context).pushAndRemoveUntil(
@@ -342,11 +341,10 @@ void succesfullyPopUp(context, text) async {
 }
 
 void wrongPopup(context, message) async {
-  //DeviceAV device;
   return showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
         return Theme(
             data: ThemeData(primaryColor: Colors.white24),
             child: CupertinoAlertDialog(
@@ -358,16 +356,25 @@ void wrongPopup(context, message) async {
                 "Please try again",
                 style: contentPopUp,
               ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (Navigator.of(dialogContext).canPop()) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                  },
+                  child: Text('OK', style: buttonsPopUp),
+                ),
+              ],
             ));
       });
 }
 
 void GoodPopup(context, message) async {
-  //DeviceAV device;
   return showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
         return Theme(
             data: ThemeData(primaryColor: Colors.white24),
             child: CupertinoAlertDialog(
@@ -375,7 +382,17 @@ void GoodPopup(context, message) async {
                   message,
                   style: titlePopUp,
                 ),
-                content: Icon(Entypo.check)));
+                content: Icon(Entypo.check),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      if (Navigator.of(dialogContext).canPop()) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                    },
+                    child: Text('OK', style: buttonsPopUp),
+                  ),
+                ]));
       });
 }
 

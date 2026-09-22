@@ -53,16 +53,32 @@ class _CustomDesplegableTileState extends State<CustomDesplegableTile> {
   @override
   void initState() {
     super.initState();
+    if (widget.OC.fecha_inicio != null) {
+      date_start = widget.OC.fecha_inicio!.split("T").first;
+    } else {
+      date_start = '';
+    }
     loadData();
   }
 
   Future<void> loadData() async {
-    List separated = widget.OC.fecha_inicio!.split("T");
-    date_start = separated[0];
-    await getStatus();
-    setState(() {
-      isLoading = false;
-    });
+    try {
+      // Usar status de la OC si existe (evita 1 request por fila al abrir la lista)
+      if (widget.OC.status != null) {
+        totalProducts = widget.OC.status!;
+        getIconStatus();
+      } else {
+        await getStatus();
+      }
+    } catch (e, st) {
+      print('[CustomDesplegableTile] loadData error: $e\n$st');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   getProducts(id_entrega) async {
@@ -216,7 +232,7 @@ class _CustomDesplegableTileState extends State<CustomDesplegableTile> {
                           )
                         : key == "date"
                             ? AutoSizeText(
-                                date_start!,
+                                date_start ?? '',
                                 textAlign: TextAlign.center,
                               )
                             : key == "purchase order"

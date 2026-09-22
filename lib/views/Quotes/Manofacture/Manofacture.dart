@@ -251,30 +251,18 @@ class _ManofactureState extends State<Manofacture> {
           setState(() => isPressed = true);
           setState(() => isPressedSave = true);
           GoodPopup(context, "Saved");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         } else {
           setState(() => isPressed = false);
           wrongPopup(context, "Error to send quote");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         }
       } else {
         setState(() => isPressed = false);
         wrongPopup(context, "Error to send quote");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       setState(() => isPressed = false);
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -493,30 +481,18 @@ class _ManofactureState extends State<Manofacture> {
           setState(() => isPressed = true);
           setState(() => isPressedSave = true);
           GoodPopup(context, "Saved");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         } else {
           setState(() => isPressed = false);
           wrongPopup(context, "Error to send quote");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         }
       } else {
         setState(() => isPressed = false);
         wrongPopup(context, "Error to send quote");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       setState(() => isPressed = false);
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -541,16 +517,10 @@ class _ManofactureState extends State<Manofacture> {
         if (code != 200) {
           setState(() => isPressed = false);
           wrongPopup(context, "Error to send products");
-          Future.delayed(Duration(seconds: 3), () {
-            Navigator.of(context).pop();
-          });
         }
       } catch (e) {
         setState(() => isPressed = false);
         wrongPopup(context, "Error to send products");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     }
     if (code == 200) {
@@ -1729,9 +1699,6 @@ class _ManofactureState extends State<Manofacture> {
                     }
                   } else {
                     wrongPopup(context, "Save the quote first");
-                    Future.delayed(Duration(seconds: 3), () {
-                      Navigator.of(context).pop();
-                    });
                   }
                 }))
       ],

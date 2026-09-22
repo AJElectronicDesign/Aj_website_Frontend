@@ -71,28 +71,74 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
   }
 
   Future<void> loadData() async {
-    if (widget.quote!.PCBTotalMXN == 0) {
-      addPCB = false;
-    }
-    if (widget.quote!.totalComponentsMXN == 0) {
-      addComponents = false;
-    }
-    if (widget.isEdit!) {
-      date = DateFormat('MMMM d, yyyy').format(DateTime.now());
-      //Notes seran las de el preview
-      await getPreviewAndUpdate(widget.quote!.id_Quote);
-    } else {
-      date = DateFormat('MMMM d, yyyy')
-          .format(DateTime.parse(widget.quote!.date!));
-      if (widget.quote!.id_Quote == null) {
-        await getIdQuote();
+    try {
+      if (widget.quote!.PCBTotalMXN == 0) {
+        addPCB = false;
       }
-      await getPreview(0, widget.quote!.id_Quote);
+      if (widget.quote!.totalComponentsMXN == 0) {
+        addComponents = false;
+      }
+      if (widget.isEdit!) {
+        date = DateFormat('MMMM d, yyyy').format(DateTime.now());
+        //Notes seran las de el preview
+        await getPreviewAndUpdate(widget.quote!.id_Quote);
+      } else {
+        date = DateFormat('MMMM d, yyyy')
+            .format(DateTime.parse(widget.quote!.date!));
+        if (widget.quote!.id_Quote == null) {
+          await getIdQuote();
+        }
+        await getPreview(0, widget.quote!.id_Quote);
+      }
+    } catch (e, st) {
+      print('[Preview_Assemblies] loadData error: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        onErrore = true;
+        isLoading = false;
+      });
+      await _showLoadErrorDialog();
+      return;
     }
 
+    if (!mounted) return;
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> _showLoadErrorDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) {
+        return Theme(
+          data: ThemeData(colorScheme: const ColorScheme.light()),
+          child: CupertinoAlertDialog(
+            title: const Text('Error'),
+            content: const Text(
+              'No se pudo cargar el preview. Por favor intenta de nuevo.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogCtx).pop();
+                  if (!mounted) return;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          DesplegableQuotes(customer: widget.customer!),
+                    ),
+                  );
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   getPreviewAndUpdate(idQuote) async {
@@ -105,7 +151,11 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
     await fillColumnsSpanish();
     setState(() {
       preview = preview2;
-      //Contar filas antes del envio en preview
+      // Tomar notas ANTES de mutar preview1 (removeRange puede dejarlo vacío)
+      final savedNotes = preview2.isNotEmpty
+          ? (preview2.first.notas ?? notes.text)
+          : notes.text;
+      // Contar filas antes del envío en preview
       for (var i = 0; i < preview1.length; i++) {
         if (preview1[i].description!.contains("Envío")) {
           break;
@@ -113,15 +163,19 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
           countRowsBeforeEnvio += 1;
         }
       }
-      preview1.removeRange(0, countRowsBeforeEnvio);
+      if (countRowsBeforeEnvio > 0 &&
+          countRowsBeforeEnvio <= preview1.length) {
+        preview1.removeRange(0, countRowsBeforeEnvio);
+      }
       for (var i = 0; i < editedList.length; i++) {
-        previewLocal.add(editedList[i]);
+        // Filas editadas / del preview actual: marcar para no regenerar al exportar
+        previewLocal.add(editedList[i].copy(isDescEdited: true));
       }
       for (var i = 0; i < preview1.length; i++) {
-        previewLocal.add(preview1[i]);
+        previewLocal.add(preview1[i].copy(isDescEdited: true));
       }
       rows = previewLocal;
-      notes.text = preview1[0].notas!;
+      notes.text = savedNotes;
     });
   }
 
@@ -137,7 +191,10 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
       startValues = preview1.length;
       if (preview1.isNotEmpty) {
         notes.text = preview1[0].notas!;
-        rows = preview1;
+        // Preview guardado es la fuente de verdad: no regenerar defaults al exportar
+        rows = preview1
+            .map((r) => r.copy(isDescEdited: true))
+            .toList();
         isUpdate = true;
       } else {
         await fillColumnsSpanish();
@@ -302,21 +359,12 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
       print("Code: $code");
       if (code == 200) {
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         wrongPopup(context, "Error to send quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -338,21 +386,12 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
       print("Code: $code");
       if (code == 200) {
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         wrongPopup(context, "Error to send quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -382,16 +421,10 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
         await postPreview(addList);
       } else {
         wrongPopup(context, "Error to send quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -408,21 +441,12 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
       print("Code: $code");
       if (code == 200) {
         GoodPopup(context, "Saved");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       } else {
         wrongPopup(context, "Error to delete quote preview");
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-        });
       }
     } catch (e) {
       print("error $e");
       PopupError(context);
-      Future.delayed(Duration(seconds: 3), () {
-        Navigator.of(context).pop();
-      });
       return 1005;
     }
   }
@@ -657,6 +681,7 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
                 quote: widget.quote!, // tu objeto QuoteClass
                 customer: widget.customer!, // tu objeto CustomersClass
                 notes: notes.text, // opcional
+                notesEdited: true, // notas del preview (guardadas/editadas)
                 pageFormat: PdfPageFormat.a3, // o .a4, según quieras
               );
             },
@@ -689,6 +714,7 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
                 quote: widget.quote!, // tu objeto QuoteClass
                 customer: widget.customer!, // tu objeto CustomersClass
                 notes: notes.text, // opcional
+                notesEdited: true, // notas del preview (guardadas/editadas)
                 pageFormat: PdfPageFormat.a3, // o .a4, según quieras
               );
             },
@@ -866,7 +892,7 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
     setState(() => rows = rows.map((quote) {
           final isEditedDescription = quote == editQuote;
           return isEditedDescription
-              ? quote.copy(description: description)
+              ? quote.copy(description: description, isDescEdited: true)
               : quote;
         }).toList());
   }
@@ -877,7 +903,9 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
         title: "Costo unitario", value: unitarioString);
     setState(() => rows = rows.map((quote) {
           final isEditedUnitario = quote == editQuote;
-          return isEditedUnitario ? quote.copy(unitario: unitario) : quote;
+          return isEditedUnitario
+              ? quote.copy(unitario: unitario, isDescEdited: true)
+              : quote;
         }).toList());
   }
 
@@ -886,7 +914,9 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
         title: "Cantidad", value: editQuote.cantidad!);
     setState(() => rows = rows.map((quote) {
           final isEditedCantidad = quote == editQuote;
-          return isEditedCantidad ? quote.copy(cantidad: cantidad) : quote;
+          return isEditedCantidad
+              ? quote.copy(cantidad: cantidad, isDescEdited: true)
+              : quote;
         }).toList());
   }
 
@@ -895,7 +925,9 @@ class _Preview_AssembliesState extends State<Preview_Assemblies> {
         await showTextDialog(context, title: "Total", value: editQuote.total!);
     setState(() => rows = rows.map((quote) {
           final isEditedTotal = quote == editQuote;
-          return isEditedTotal ? quote.copy(total: Total) : quote;
+          return isEditedTotal
+              ? quote.copy(total: Total, isDescEdited: true)
+              : quote;
         }).toList());
   }
 

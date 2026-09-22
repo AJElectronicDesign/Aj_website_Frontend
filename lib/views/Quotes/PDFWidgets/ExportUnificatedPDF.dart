@@ -111,9 +111,12 @@ class ExportToPDFUnified {
   Future<void> createPDF(final PdfPageFormat format) async {
     List<QuoteTableClass> rowsForExport = dataTable;
 
-// Solo para Ensambles: si el PDF es EN y las filas no están editadas -> usar plantillas EN
-    if (type == QuoteType.assembly) {
-      final allUnedited = rowsForExport.every((r) => r.isDescEdited == false);
+    // Solo regenerar plantillas EN/ES si las filas NO vienen editadas ni de un preview guardado.
+    // Si isDescEdited nunca se marca (bug histórico), el export descartaba el dataTable del preview.
+    if (type == QuoteType.assembly && rowsForExport.isNotEmpty) {
+      final allUnedited = rowsForExport.every(
+        (r) => r.isDescEdited == false && r.id_quotePreview == null,
+      );
 
       if (isEnglish && allUnedited) {
         // Factory EN usando los mismos datos
