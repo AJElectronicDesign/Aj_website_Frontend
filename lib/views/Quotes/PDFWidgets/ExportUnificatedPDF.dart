@@ -14,9 +14,9 @@ import 'dart:html' as html;
 import '../../../main.dart';
 import '../../../utils/SuperGlobalVariables/ObjVar.dart';
 import '../../Delivery_Certificate/adminClases/CustomerClass.dart';
-import '../../admin_view/Tools.dart';
 import '../Clases/QuoteClass.dart';
 import '../Clases/QuoteTableClass.dart';
+import 'customer_logo.dart';
 
 /// Unificador de exportables para Ensambles y Manufactura
 /// Mantiene TU diseño original (header/footer/márgenes),
@@ -197,7 +197,7 @@ class ExportToPDFUnified {
           .buffer
           .asUint8List(),
     );
-    final logoEmpresa = pw.MemoryImage(convertListToInt(customer.logo!));
+    final logoEmpresa = customerLogoImage(customer.logo);
     pw.MemoryImage? pcbImage;
     if (type == QuoteType.assembly &&
         addPCB &&
@@ -420,8 +420,10 @@ class ExportToPDFUnified {
                       mainAxisAlignment: pw.MainAxisAlignment.end,
                       crossAxisAlignment: pw.CrossAxisAlignment.end,
                       children: [
-                        pw.Image(logoEmpresa, height: 50),
-                        pw.SizedBox(height: 10),
+                        if (logoEmpresa != null) ...[
+                          pw.Image(logoEmpresa, height: 50),
+                          pw.SizedBox(height: 10),
+                        ],
                         pw.RichText(
                           textAlign: pw.TextAlign.right,
                           text: pw.TextSpan(
