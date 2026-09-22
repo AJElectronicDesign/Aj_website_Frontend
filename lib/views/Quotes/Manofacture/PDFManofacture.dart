@@ -9,7 +9,7 @@ import 'package:printing/printing.dart';
 import '../../../main.dart';
 import '../../../utils/SuperGlobalVariables/ObjVar.dart';
 import '../../Delivery_Certificate/adminClases/CustomerClass.dart';
-import '../../admin_view/Tools.dart';
+import '../PDFWidgets/customer_logo.dart';
 import '../Clases/QuoteClass.dart';
 import '../Clases/QuoteTableClass.dart';
 import 'dart:html' as html;
@@ -81,7 +81,7 @@ class ExportToPDFManofacture {
         (await rootBundle.load('assets/images/FooterAJ.png'))
             .buffer
             .asUint8List());
-    final logoEmpresa = pw.MemoryImage(convertListToInt(customer!.logo!));
+    final logoEmpresa = customerLogoImage(customer!.logo);
 
     // ************ Get TextStyles ************ //
     var body = await PdfGoogleFonts.openSansMedium();
@@ -367,18 +367,20 @@ class ExportToPDFManofacture {
                                     //           image: pw.MemoryImage(convertListToInt(
                                     //               customer!.logo!)))),
                                     // ),
-                                    pw.Container(
-                                      alignment: pw.Alignment.topRight,
-                                      child: pw.Image(
-                                        height: 50,
-                                        logoEmpresa,
-                                        alignment: pw.Alignment.topLeft,
-                                        fit: pw.BoxFit.contain,
+                                    if (logoEmpresa != null)
+                                      pw.Container(
+                                        alignment: pw.Alignment.topRight,
+                                        child: pw.Image(
+                                          height: 50,
+                                          logoEmpresa,
+                                          alignment: pw.Alignment.topLeft,
+                                          fit: pw.BoxFit.contain,
+                                        ),
                                       ),
-                                    ),
-                                    pw.SizedBox(
-                                      height: 10,
-                                    ),
+                                    if (logoEmpresa != null)
+                                      pw.SizedBox(
+                                        height: 10,
+                                      ),
                                     pw.RichText(
                                         textAlign: pw.TextAlign.right,
                                         text: pw.TextSpan(children: [
